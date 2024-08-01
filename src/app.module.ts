@@ -11,7 +11,7 @@ import { GameModule } from './game/game.module';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseService } from './database/database.service';
 import { ConfigModule } from '@nestjs/config';
-import { BioModule } from './bio/bio.module';
+import { ActivityModule } from './activity/activity.module';
 
 @Module({
   imports: [
@@ -19,7 +19,6 @@ import { BioModule } from './bio/bio.module';
     PostsModule,
     UsersModule,
     DatabaseModule,
-    BioModule,
     ThrottlerModule.forRoot([
       {
         name: 'short',
@@ -36,7 +35,7 @@ import { BioModule } from './bio/bio.module';
     PostsModule,
     GameModule,
     AuthModule,
-    BioModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [

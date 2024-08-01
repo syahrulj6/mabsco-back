@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Ip,
-  BadRequestException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { Prisma } from '@prisma/client';

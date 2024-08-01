@@ -2,10 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateCommentDto } from './dto/createCommentDto';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly activityService: ActivityService,
+  ) {}
 
   async create(createPostDto: Prisma.PostCreateInput) {
     const trimmedTitle = createPostDto.title.toString().trim();
@@ -86,6 +90,12 @@ export class PostsService {
   }
 
   async remove(id: string) {
+    // Delete associated comments
+    await this.databaseService.comment.deleteMany({
+      where: { postId: id },
+    });
+
+    // Delete the post
     return this.databaseService.post.delete({
       where: { id },
     });
@@ -101,26 +111,42 @@ export class PostsService {
       },
     });
   }
-
   async addComment(postId: string, createCommentDto: CreateCommentDto) {
     const trimmedContent = createCommentDto.content.toString().trim();
 
     if (!trimmedContent)
       throw new BadRequestException('Comment cannot be empty.');
 
-    const newComment: Prisma.CommentCreateInput = {
-      content: trimmedContent,
-      post: {
-        connect: { id: postId },
+    const newComment = await this.databaseService.comment.create({
+      data: {
+        content: trimmedContent,
+        post: { connect: { id: postId } },
+        author: { connect: { id: createCommentDto.authorId } },
       },
-      author: {
-        connect: { id: createCommentDto.authorId },
-      },
-    };
-
-    return this.databaseService.comment.create({
-      data: newComment,
     });
+
+    // Get the post information including the author
+    const post = await this.databaseService.post.findUnique({
+      where: { id: postId },
+      include: { author: true },
+    });
+
+    // Get the comment author information
+    const commentAuthor = await this.databaseService.user.findUnique({
+      where: { id: createCommentDto.authorId },
+      select: { name: true },
+    });
+
+    if (post && commentAuthor) {
+      await this.activityService.create({
+        userId: post.authorId,
+        postId: postId,
+        type: 'COMMENT',
+        message: `${commentAuthor.name} mengomentari postingan anda`,
+      });
+    }
+
+    return newComment;
   }
 
   async deleteComment(commentId: string) {

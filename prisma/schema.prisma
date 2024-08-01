@@ -11,27 +11,29 @@ datasource db {
 }
 
 model User {
-  id            String @id @default(cuid())
-  email         String @unique
-  name          String
-  image         String?
-  onboarded     Boolean @default(false)
-  posts         Post[]
-  isAdmin       Boolean @default(false)
-  password      String
-  game          Game[]
-  bio           String?
-  comments      Comment[]
+  id        String @id @default(cuid())
+  email     String @unique
+  name      String
+  image     String?
+  onboarded Boolean @default(false)
+  posts     Post[]
+  isAdmin   Boolean @default(false)
+  password  String
+  game      Game[]
+  bio       String?
+  comments  Comment[]
+  activities Activity[]
 }
 
 model Post {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  title         String
-  author        User      @relation(fields: [authorId], references: [id])
-  authorId      String
-  comments      Comment[]
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  title       String
+  author      User       @relation(fields: [authorId], references: [id])
+  authorId    String
+  comments    Comment[]
+  activities  Activity[]
 }
 
 model Comment {
@@ -44,19 +46,29 @@ model Comment {
   authorId  String
 }
 
-
-
 model Game {
   id        String   @id @default(cuid())
-  username      String
-  gameTitle     GameTitle     
-  gameId        String
-  user          User @relation(fields: [userId], references: [id])
-  userId        String @unique
+  username  String
+  gameTitle GameTitle     
+  gameId    String
+  user      User @relation(fields: [userId], references: [id])
+  userId    String @unique
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
 }
 
 enum GameTitle {
   VALORANT
   MOBILE_LEGENDS
   FREE_FIRE
+  PUBGM
 }
